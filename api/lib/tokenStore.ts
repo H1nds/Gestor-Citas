@@ -1,8 +1,5 @@
-// api/lib/tokenStore.ts
-import fs from 'fs';
-import path from 'path';
-
-const STORE_PATH = process.env.TOKEN_STORE_PATH || path.join(process.cwd(), 'tokens.json');
+﻿// api/lib/tokenStore.ts
+import { db } from './firebaseAdmin';
 
 export type TokenRecord = {
     refresh_token?: string;
@@ -13,57 +10,54 @@ export type TokenRecord = {
     createdAt?: number;
 };
 
-// Guarda el token asociado a un uid (objeto tokens: { [uid]: TokenRecord })
+const COLLECTION_NAME = 'google_calendar_tokens';
+
+// Guarda el token asociado a un uid en Firestore
 export async function saveRefreshTokenForUid(uid: string, record: TokenRecord) {
+    if (!db) {
+        console.error('Firestore (Admin) no está inicializado. No se puede guardar el token.');
+        throw new Error('Database no inicializada');
+    }
+
     const base = { ...record, createdAt: Date.now() };
     try {
-        let data: Record<string, TokenRecord> = {};
-        if (fs.existsSync(STORE_PATH)) {
-            const raw = fs.readFileSync(STORE_PATH, 'utf-8');
-            data = raw ? JSON.parse(raw) : {};
-        }
-        data[uid] = base;
-        fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+        await db.collection(COLLECTION_NAME).doc(uid).set(base);
         return true;
     } catch (e) {
-        console.error('Error saving token', e);
+        console.error('Error guardando token en Firestore:', e);
         throw e;
     }
 }
 
-// Obtiene el token almacenado para un uid
+// Obtiene el token almacenado para un uid desde Firestore
 export async function getStoredTokenForUid(uid: string): Promise<TokenRecord | null> {
+    if (!db) {
+        console.warn('Firestore (Admin) no está inicializado. No se puede leer el token.');
+        return null;
+    }
+
     try {
-        if (!fs.existsSync(STORE_PATH)) return null;
-        const raw = fs.readFileSync(STORE_PATH, 'utf-8');
-        if (!raw) return null;
-        const data: Record<string, TokenRecord> = JSON.parse(raw);
-        return data[uid] ?? null;
+        const doc = await db.collection(COLLECTION_NAME).doc(uid).get();
+        if (!doc.exists) return null;
+        return doc.data() as TokenRecord;
     } catch (e) {
-        console.error('Error reading token store', e);
+        console.error('Error leyendo token desde Firestore:', e);
         return null;
     }
 }
 
-// Elimina el token para un uid espec�fico
+// Elimina el token para un uid específico en Firestore
 export async function deleteTokenForUid(uid: string): Promise<boolean> {
+    if (!db) {
+        console.error('Firestore (Admin) no está inicializado. No se puede borrar el token.');
+        throw new Error('Database no inicializada');
+    }
+
     try {
-        let data: Record<string, TokenRecord> = {};
-        if (fs.existsSync(STORE_PATH)) {
-            const raw = fs.readFileSync(STORE_PATH, 'utf-8');
-            data = raw ? JSON.parse(raw) : {};
-        }
-
-        // Si el usuario existe en el JSON, elim�nalo
-        if (data[uid]) {
-            delete data[uid];
-            // Escribe el archivo de vuelta sin el usuario
-            fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-        }
-
+        await db.collection(COLLECTION_NAME).doc(uid).delete();
         return true;
     } catch (e) {
-        console.error('Error deleting token', e);
+        console.error('Error eliminando token de Firestore:', e);
         throw e;
     }
 }

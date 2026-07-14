@@ -1,8 +1,7 @@
-// api/lib/firebaseAdmin.ts
-import * as admin from 'firebase-admin';
+﻿import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
-// Evitar inicializaciones duplicadas en entornos serverless
-if (!admin.apps.length) {
+if (!getApps().length) {
     try {
         const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
         if (!serviceAccount) {
@@ -11,8 +10,8 @@ if (!admin.apps.length) {
             // Parsear la clave desde la variable de entorno
             const credentials = JSON.parse(serviceAccount);
             
-            admin.initializeApp({
-                credential: admin.credential.cert(credentials)
+            initializeApp({
+                credential: cert(credentials)
             });
         }
     } catch (error) {
@@ -20,4 +19,4 @@ if (!admin.apps.length) {
     }
 }
 
-export const db = admin.apps.length ? admin.firestore() : null;
+export const db = getApps().length ? getFirestore() : null;

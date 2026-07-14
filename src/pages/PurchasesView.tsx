@@ -151,7 +151,8 @@ export default function PurchasesView() {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full text-sm border-separate border-spacing-y-3">
+                {/* Vista Escritorio */}
+                <table className="hidden lg:table min-w-full text-sm border-separate border-spacing-y-3">
                     <thead>
                         <tr className="text-left text-gray-400 text-xs uppercase tracking-wider pl-4">
                             <th className="pl-4 pb-2">Fecha</th>
@@ -212,6 +213,56 @@ export default function PurchasesView() {
                         </AnimatePresence>
                     </tbody>
                 </table>
+
+                {/* Vista Móvil (Tarjetas) */}
+                <div className="lg:hidden flex flex-col gap-4 mt-2 pb-4">
+                    <AnimatePresence>
+                        {filteredPurchases.map((p, i) => (
+                            <motion.div
+                                key={p.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: i * 0.05 }}
+                                className="bg-white/60 backdrop-blur-sm border border-gray-100 p-4 rounded-2xl shadow-sm flex flex-col gap-3 relative"
+                            >
+                                <div className="flex justify-between items-start border-b border-gray-100 pb-3">
+                                    <div>
+                                        <div className="font-bold text-gray-800 text-base">{p.productName}</div>
+                                        <div className="text-xs text-gray-500 font-mono mt-1">{p.date}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="font-bold text-gray-800 text-lg font-mono">S/. {p.totalPrice.toFixed(2)}</div>
+                                        <div className="text-xs text-gray-500 font-medium">Cant: {p.quantity}</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center pt-1">
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border ${p.category.includes("Servicios") ? "bg-yellow-50 text-yellow-600 border-yellow-200" :
+                                                p.category.includes("Insumos") ? "bg-blue-50 text-blue-600 border-blue-200" :
+                                                    "bg-babyblue-50 text-babyblue-600 border-babyblue-200"
+                                            }`}>
+                                            {p.category.split(" ")[0]}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400 italic truncate max-w-[120px]">Prov: {p.supplier || "-"}</span>
+                                    </div>
+                                    
+                                    <div className="flex gap-2">
+                                        <button onClick={() => { setEditing(p); setShowModal(true); }} className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-50 text-yellow-600 border border-yellow-100" title="Editar">
+                                            <FaEdit size={12} />
+                                        </button>
+                                        {canDelete && (
+                                            <button onClick={() => handleDelete(p.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 border border-red-100" title="Eliminar">
+                                                <FaTrash size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
 
                 {filteredPurchases.length === 0 && (
                     <div className="text-center py-12 text-gray-400 flex flex-col items-center gap-4">

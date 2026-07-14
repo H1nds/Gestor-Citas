@@ -1,4 +1,4 @@
-// src/components/Modal.tsx
+ï»¿// src/components/Modal.tsx
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes } from "react-icons/fa";
@@ -36,10 +36,10 @@ export default function Modal({ isOpen, onClose, children, width = "95%" }: Moda
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="relative transform overflow-hidden rounded-3xl text-left shadow-2xl transition-all sm:my-8 glass-modal" // <-- AQUÍ EL CAMBIO CLAVE
-                                style={{ width: width, maxWidth: "800px", margin: "2rem auto" }}
+                                className="relative transform overflow-hidden rounded-3xl text-left shadow-2xl transition-all sm:my-8 glass-modal w-[95%] sm:w-auto" // <-- AQUï¿½ EL CAMBIO CLAVE
+                                style={{ width: width, maxWidth: "800px" }}
                             >
-                                {/* Botón de cerrar flotante */}
+                                {/* Botï¿½n de cerrar flotante */}
                                 <div className="absolute top-4 right-4 z-10">
                                     <button
                                         onClick={onClose}
@@ -50,7 +50,7 @@ export default function Modal({ isOpen, onClose, children, width = "95%" }: Moda
                                 </div>
 
                                 {/* Contenido con padding interno */}
-                                <div className="px-8 py-8 pt-12 sm:p-10 sm:pt-12">
+                                <div className="px-5 py-6 pt-10 sm:px-10 sm:py-10 sm:pt-12">
                                     {children}
                                 </div>
                             </motion.div>

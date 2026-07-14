@@ -45,7 +45,8 @@ export default function SalesTable({ sales, onEdit, onDelete }: Props) {
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full text-sm border-separate border-spacing-y-3">
+                {/* Vista Escritorio (Tabla) */}
+                <table className="hidden lg:table min-w-full text-sm border-separate border-spacing-y-3">
                     <thead>
                         <tr className="text-left text-gray-400 text-xs uppercase tracking-wider">
                             <th className="pl-4 pb-2">Fecha</th>
@@ -153,6 +154,78 @@ export default function SalesTable({ sales, onEdit, onDelete }: Props) {
                         </AnimatePresence>
                     </tbody>
                 </table>
+
+                {/* Vista Móvil (Tarjetas) */}
+                <div className="lg:hidden flex flex-col gap-4 mt-2 pb-4">
+                    <AnimatePresence>
+                        {sales.map((sale, index) => {
+                            const subtotal = calcSubtotal(sale);
+                            const clientData = (sale as any).client;
+
+                            return (
+                                <motion.div
+                                    key={sale.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="bg-white/60 backdrop-blur-sm border border-gray-100 p-4 rounded-2xl shadow-sm flex flex-col gap-3 relative"
+                                >
+                                    <div className="flex justify-between items-start border-b border-gray-100 pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex flex-col items-center bg-gray-50 rounded-lg p-2 min-w-[50px]">
+                                                <span className="font-bold text-gray-700 text-lg leading-none">
+                                                    {new Date(sale.dateService).getDate()}
+                                                </span>
+                                                <span className="text-[10px] uppercase text-gray-400 font-bold leading-none mt-1">
+                                                    {new Date(sale.dateService).toLocaleString('es-ES', { month: 'short' })}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-800 text-base">{clientData ? `${clientData.nombres.split(' ')[0]} ${clientData.apellidos.split(' ')[0]}` : 'Anónimo'}</div>
+                                                <div className="text-sm text-gray-500 font-medium truncate max-w-[150px]">{sale.serviceType.split('-')[1] || sale.serviceType} <span className="text-xs bg-gray-100 px-1.5 rounded-md ml-1 text-gray-600">x{sale.quantity}</span></div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-gray-800 text-lg">S/ {subtotal.toFixed(2)}</div>
+                                            <div className="text-[10px] text-green-500 font-medium whitespace-nowrap">Com: S/ {calcTotalNailer(sale).toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center pt-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-gray-100 shadow-sm">
+                                                {getPaymentIcon(sale.paymentMethod)}
+                                                <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">{sale.paymentMethod}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-gold-50/50 px-2 py-1 rounded-full border border-gold-100">
+                                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-gold-400 to-gold-500 flex items-center justify-center text-white text-[8px] font-bold">
+                                                    {sale.nailer.charAt(0)}
+                                                </div>
+                                                <span className="text-[10px] font-bold text-gold-700">{sale.nailer}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        {(onEdit || onDelete) && (
+                                            <div className="flex gap-2">
+                                                {onEdit && (
+                                                    <button onClick={() => onEdit(sale)} className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-50 text-yellow-600 border border-yellow-100" title="Editar">
+                                                        <FaEdit size={14} />
+                                                    </button>
+                                                )}
+                                                {onDelete && (
+                                                    <button onClick={() => handleDelete(sale.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 border border-red-100" title="Eliminar">
+                                                        <FaTrash size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </AnimatePresence>
+                </div>
             </div>
         </div>
     );

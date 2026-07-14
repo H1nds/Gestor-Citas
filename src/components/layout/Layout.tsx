@@ -14,12 +14,12 @@ type Props = {
 // CORRECCI�N 2: Quitamos 'userEmail' de aqu� porque no lo usamos dentro del HTML
 export default function Layout({ children, initial, onSectionChange }: Props) {
     return (
-        <div className="flex min-h-screen bg-brand-mesh">
-            <div className="w-28 flex-shrink-0 z-20">
+        <div className="flex flex-col lg:flex-row min-h-screen bg-brand-mesh">
+            <div className="lg:w-28 flex-shrink-0 z-50">
                 <Sidebar active={initial} onNavigate={onSectionChange} />
             </div>
 
-            <main className="flex-1 p-6 overflow-x-hidden z-10">
+            <main className="flex-1 p-4 lg:p-6 pb-24 lg:pb-6 overflow-x-hidden z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 15, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}

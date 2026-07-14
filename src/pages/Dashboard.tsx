@@ -106,14 +106,14 @@ export default function Dashboard({ user, onLogout }: { user: string; onLogout: 
         <Layout initial={activeView} onSectionChange={handleSectionChange} userEmail={user}>
             <div className="min-h-screen p-6 text-left" style={{ backgroundColor: "var(--bg-main)", color: "var(--text-main)" }}>
 
-                <header className="flex items-center justify-between mb-6">
+                <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-2 font-serif text-gray-800">
+                        <h2 className="text-xl md:text-2xl font-bold flex flex-wrap items-center gap-2 font-serif text-gray-800">
                             Panel de Administración
-                            {isAdmin && <span className="text-xs bg-gradient-to-r from-gold-600 to-gold-400 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">Modo Administrador</span>}
+                            {isAdmin && <span className="text-[10px] md:text-xs bg-gradient-to-r from-gold-600 to-gold-400 text-white px-2 py-1 md:px-3 md:py-1 rounded-full uppercase tracking-wider shadow-sm">Modo Admin</span>}
                         </h2>
                     </div>
-                    <div className="flex items-center gap-4"> {/* Aumentamos gap */}
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-start md:justify-end">
                         {activeView === 'ventas' && (
                             <>
                                 {isAdmin && (

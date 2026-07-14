@@ -104,7 +104,8 @@ export default function ClientView({ onEdit }: Props) {
             </div>
 
             <div className="overflow-visible">
-                <table className="min-w-full text-sm border-separate border-spacing-y-4">
+                {/* Vista Escritorio */}
+                <table className="hidden lg:table min-w-full text-sm border-separate border-spacing-y-4">
                     <thead>
                         <tr className="text-left text-gray-400 text-xs uppercase tracking-wider font-medium">
                             <th className="pl-6 pb-2">Cliente</th>
@@ -169,6 +170,59 @@ export default function ClientView({ onEdit }: Props) {
                         </AnimatePresence>
                     </tbody>
                 </table>
+
+                {/* Vista Móvil (Tarjetas) */}
+                <div className="lg:hidden flex flex-col gap-4 mt-2 pb-4">
+                    <AnimatePresence>
+                        {filteredClients.map((client, index) => (
+                            <motion.div
+                                key={client.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ delay: index * 0.05 }}
+                                className="bg-white/60 backdrop-blur-sm border border-gray-100 p-4 rounded-2xl shadow-sm flex flex-col gap-4 relative"
+                            >
+                                <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-100 to-gold-200 border-2 border-white shadow-sm flex items-center justify-center text-babyblue-600 text-lg font-bold font-serif flex-shrink-0">
+                                        {client.nombres.charAt(0)}{client.apellidos.charAt(0)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-bold text-gray-800 text-base leading-tight">{client.nombres}</div>
+                                        <div className="text-sm text-gray-500 leading-tight">{client.apellidos}</div>
+                                        <div className="text-xs text-gray-400 mt-1 font-mono">DNI: {client.dni}</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between">
+                                    {client.phone ? (
+                                        <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                                            <FaPhone size={12} className="text-green-500" />
+                                            <span className="font-medium text-xs">{client.phone}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-gray-300 text-xs italic">Sin contacto</span>
+                                    )}
+
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => handleWhatsApp(client)} title="WhatsApp" className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50 text-green-600 border border-green-100 hover:bg-green-500 hover:text-white transition-colors">
+                                            <FaWhatsapp size={14} />
+                                        </button>
+                                        <button onClick={() => handleEdit(client)} title="Editar" className="w-8 h-8 flex items-center justify-center rounded-full bg-gold-50 text-gold-600 border border-gold-100 hover:bg-gold-500 hover:text-white transition-colors">
+                                            <FaEdit size={14} />
+                                        </button>
+                                        {canDelete && (
+                                            <button onClick={() => handleDelete(client.id)} title="Eliminar" className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white transition-colors">
+                                                <FaTrash size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+
                 {filteredClients.length === 0 && searchQuery && (
                     <div className="text-center py-8 text-gray-500">
                         No se encontraron clientes para "{searchQuery}"

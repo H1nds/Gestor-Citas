@@ -1,7 +1,8 @@
 // src/components/domain/NewSaleForm.tsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import type { Sale } from '@/types';
+import type { Sale, ServiceDef } from '@/types';
 import { uid as generarIdVenta } from '@/utils';
+import { SERVICES_TO_SEED } from '@/utils/seedData';
 import { FaTimes, FaSave, FaSearch, FaUserPlus, FaCalendarAlt, FaPlus } from "react-icons/fa";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db, auth } from '@/config/firebase';
@@ -27,13 +28,15 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
     const rootRef = useRef<HTMLDivElement | null>(null);
     const focusRef = useRef<HTMLDivElement | null>(null);
 
-    const [dateService, setDateService] = useState(initial ? initial.dateService : new Date().toISOString().slice(0, 10));
+    const [dateService, setDateService] = useState(initial ? initial.dateService : new Date().toISOString().slice(0, 16));
     
     // Services
-    const [dbServices, setDbServices] = useState<string[]>([]);
+    const [dbServices, setDbServices] = useState<ServiceDef[]>([]);
     const [serviceType, setServiceType] = useState(initial ? initial.serviceType : '');
     const [serviceQuery, setServiceQuery] = useState('');
     const [isAddingService, setIsAddingService] = useState(false);
+    const [isSeeding, setIsSeeding] = useState(false);
+    const [isFetchingServices, setIsFetchingServices] = useState(true);
 
     const [description, setDescription] = useState(initial?.description ?? '');
     
@@ -70,10 +73,19 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
         const fetchServices = async () => {
             try {
                 const snap = await getDocs(collection(db, 'servicios'));
-                const s = snap.docs.map(doc => doc.data().name as string);
+                const s = snap.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        name: data.name as string,
+                        priceBase: (data.priceBase as number) || 0,
+                        category: data.category as string || ''
+                    };
+                });
                 setDbServices(s);
             } catch (e) {
                 console.error("Error fetching services", e);
+            } finally {
+                setIsFetchingServices(false);
             }
         };
         fetchServices();
@@ -81,8 +93,8 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
 
     const filteredServices = useMemo(() => {
         const q = serviceQuery.trim().toLowerCase();
-        if (!q) return dbServices.slice(0, 20);
-        return dbServices.filter(s => s.toLowerCase().includes(q)).slice(0, 20);
+        if (!q) return dbServices;
+        return dbServices.filter(s => s.name.toLowerCase().includes(q));
     }, [serviceQuery, dbServices]);
 
     const handleAddService = async () => {
@@ -90,8 +102,8 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
         if (!newService) return;
         setIsAddingService(true);
         try {
-            await addDoc(collection(db, 'servicios'), { name: newService });
-            setDbServices(prev => [...prev, newService]);
+            await addDoc(collection(db, 'servicios'), { name: newService, priceBase: 0 });
+            setDbServices(prev => [...prev, { name: newService, priceBase: 0 }]);
             setServiceType(newService);
             setServiceQuery('');
         } catch (e) {
@@ -99,6 +111,23 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
             alert("Error al agregar servicio");
         } finally {
             setIsAddingService(false);
+        }
+    };
+
+    const handleSeedServices = async () => {
+        setIsSeeding(true);
+        try {
+            const col = collection(db, 'servicios');
+            for (const s of SERVICES_TO_SEED) {
+                await addDoc(col, s);
+            }
+            setDbServices(SERVICES_TO_SEED);
+            alert("¡Servicios sembrados con éxito!");
+        } catch (e) {
+            console.error("Error seeding", e);
+            alert("Error al sembrar servicios");
+        } finally {
+            setIsSeeding(false);
         }
     };
 
@@ -268,16 +297,29 @@ export default function NewSaleForm({ onSave, onCancel, initial = null }: Props)
                                 </div>
                             )}
                         </div>
-                        {(serviceQuery || dbServices.length > 0) && !serviceType && (
+                        {(!serviceType) && (
                             <div className="max-h-40 overflow-auto border border-t-0 border-gray-200 rounded-b-xl bg-white shadow-lg absolute w-full z-20">
-                                {serviceQuery && !dbServices.find(s => s.toLowerCase() === serviceQuery.toLowerCase().trim()) && (
+                                {dbServices.length === 0 && !serviceQuery && !isFetchingServices && (
+                                    <button type="button" onClick={handleSeedServices} disabled={isSeeding} className="w-full text-left p-3 text-white bg-green-500 hover:bg-green-600 font-bold border-b transition-colors">
+                                        {isSeeding ? 'Sembrando...' : 'Sembrar BD con catálogo oficial'}
+                                    </button>
+                                )}
+                                {isFetchingServices && dbServices.length === 0 && (
+                                    <div className="p-3 text-sm text-gray-400 text-center italic">Cargando catálogo...</div>
+                                )}
+                                {serviceQuery && !dbServices.find(s => s.name.toLowerCase() === serviceQuery.toLowerCase().trim()) && (
                                     <button type="button" onClick={handleAddService} disabled={isAddingService} className="w-full text-left p-3 flex items-center gap-2 text-babyblue-600 bg-babyblue-50 hover:bg-babyblue-100 font-bold border-b border-gray-100 transition-colors">
                                         <FaPlus /> {isAddingService ? 'Añadiendo...' : `Añadir "${serviceQuery.trim()}" como nuevo`}
                                     </button>
                                 )}
                                 {filteredServices.map(s => (
-                                    <div key={s} onClick={() => { setServiceType(s); setServiceQuery(''); }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 transition-colors">
-                                        {s}
+                                    <div key={s.name} onClick={() => { 
+                                        setServiceType(s.name); 
+                                        setServiceQuery(''); 
+                                        if (s.priceBase > 0) setUnitPrice(String(s.priceBase));
+                                    }} className="p-3 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 border-b border-gray-50 last:border-0 transition-colors flex justify-between">
+                                        <span>{s.name}</span>
+                                        {s.priceBase > 0 && <span className="font-bold text-gray-500">S/ {s.priceBase.toFixed(2)}</span>}
                                     </div>
                                 ))}
                                 {filteredServices.length === 0 && !serviceQuery && (

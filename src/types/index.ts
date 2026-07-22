@@ -37,3 +37,4 @@ export type Purchase = {
     notes?: string;
     createdAt: string;
 };
+export type ServiceDef = { name: string; priceBase: number; category?: string; };

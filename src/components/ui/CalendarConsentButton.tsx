@@ -27,6 +27,10 @@ export default function CalendarConsentButton() {
             setChecking(true); // Asegura que estemos en 'checking'
             try {
                 const res = await fetch(`/api/calendar/status?uid=${uid}`);
+                if (!res.ok || !res.headers.get('content-type')?.includes('application/json')) {
+                    setConnected(false);
+                    return;
+                }
                 const json = await res.json();
                 setConnected(Boolean(json?.connected));
             } catch (err) {
